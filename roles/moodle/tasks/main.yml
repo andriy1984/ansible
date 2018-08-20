@@ -1,14 +1,10 @@
 ---
-- name: Install wget
-  yum: 
-    name: wget
-    state: installed
-
 - name: Download and extract moodle
-  command: "{{ item }}"
-  with_items:
-  - wget https://download.moodle.org/download.php/direct/stable35/moodle-latest-35.tgz
-  - sudo tar -zxvf moodle-latest-35.tgz -C /var/www/html
+  unarchive: 
+    src: https://download.moodle.org/download.php/direct/stable35/moodle-latest-35.tgz
+    dest: /var/www/html
+    remote_src: yes
+    owner: root
 
 - file:
     path: /var/moodledata
@@ -24,9 +20,17 @@
     persistent: yes
   
   notify: Restart httpd
+  
+- name: Install moodle
+  command: /usr/bin/php /var/www/html/moodle/admin/cli/install.php --wwwroot=http://192.168.56.101/moodle --dataroot=/var/moodledata --dbtype=pgsql --dbhost=192.168.56.104 --dbname=moodle --dbuser=moodleuser --dbpass=Qwerty+1 --fullname="Moodle test" --adminpass=Qwerty+1  --shortname="test" --non-interactive --agree-license --skip-database
+  when: status
 
 - name: Install moodle
   command: /usr/bin/php /var/www/html/moodle/admin/cli/install.php --wwwroot=http://192.168.56.101/moodle --dataroot=/var/moodledata --dbtype=pgsql --dbhost=192.168.56.104 --dbname=moodle --dbuser=moodleuser --dbpass=Qwerty+1 --fullname="Moodle test" --adminpass=Qwerty+1  --shortname="test" --non-interactive --agree-license
+  when: not status
+  vars:
+    status: true
+    
 
 - name: config file 
   file: 
