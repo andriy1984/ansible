@@ -1,0 +1,40 @@
+---
+- name: install repo
+    yum:
+        name: https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-redhat96-9.6-3.noarch.rpm
+        state: installed
+
+- name: install psql
+    yum:
+        name: postgresql96-server
+        state: installed
+
+- name: init db
+    command: /usr/pgsql-9.6/bin/postgresql96-setup initdb
+
+- name: enable and start server
+    service:
+        name: postgresql-9.6
+        enable: yes
+        state: started
+
+- name: Configure  db server
+    command: echo "host all all 192.168.56.0/24 md5" >> /var/lib/pgsql/9.6/data/pg_hba.conf
+
+- name: conf connect to db server
+    command: echo "listen_addresses = '*'" >> /var/lib/pgsql/9.6/data/postgresql.conf
+
+- name: create user in db server
+    command: sudo -u postgres psql -c "CREATE USER moodleuser WITH PASSWORD 'Qwerty+1';"
+
+- name: create db in db server
+    command: sudo -u postgres psql -c "CREATE DATABASE moodle WITH OWNER moodleuser;"
+
+    notify: Rrestart psql
+    notify: Rrestart httpd
+
+- name: Config SELinux
+    comand: "{{ item }}"
+    with_items:
+    - chcon -R -t httpd_sys_rw_content_t /var/moodledata
+    - setsebool -P httpd_can_network_connect_db on

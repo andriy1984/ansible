@@ -1,0 +1,28 @@
+---
+- name: config webserver
+  hosts: web
+  sudo: yes
+   
+  roles:
+   - web
+
+- name: config db
+  hosts: db
+  sudo: yes
+  
+  roles:
+   - db
+   
+- name: install moodle
+  hosts: web
+  sudo: yes
+  
+  roles:
+   - moodle
+
+- name: install nginx
+  hosts: controller
+  sudo: yes
+  
+  roles:
+   - balance
